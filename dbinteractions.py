@@ -120,3 +120,27 @@ def update_user(login_token,
     disconnect_db(conn, cursor)
     # Returning variables from the function
     return success, user, user_id
+
+
+def delete_user(user_id):
+    # Assigning a variable to return in the end
+    success = None
+    conn, cursor = connect_db()
+    try:
+        # DELETE query based on user_id
+        cursor.execute(
+            "delete from user where id = ?", [user_id])
+        # Saving changes
+        conn.commit()
+        # The following condition checks if the query happens
+        if(cursor.rowcount == 1):
+            # In case it does, success is changed to True
+            success = True
+    except db.OperationalError:
+        print("Something is wrong with the DB, please try again in 5 minutes")
+    except db.ProgrammingError:
+        print("Error running DB query, please file bug report")
+    except:
+        print("Something went wrong!")
+    disconnect_db(conn, cursor)
+    return success

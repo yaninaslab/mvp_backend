@@ -75,6 +75,25 @@ def update_user():
         return Response("Sorry, something is wrong with the service. Please try again later", mimetype="plain/text", status=501)
 
 
+@app.delete('/api/users')
+def delete_user():
+    try:
+        # Requesting data from the frontend
+        user_id = request.json['userId']
+        # We assign a variable to the function output and if it's true, we convert the data into json
+        user_id = dbi.delete_user(user_id)
+        if(user_id == True):
+            user_id_json = json.dumps(user_id, default=str)
+            # Returning response in json and request status
+            return Response(user_id_json, mimetype="application/json", status=200)
+        else:
+            return Response("Please enter valid data", mimetype="plain/text", status=400)
+# In case of error this will be returned
+    except:
+        print("Something went wrong")
+        return Response("Sorry, something is wrong with the service. Please try again later", mimetype="plain/text", status=501)
+
+
 if(len(sys.argv) > 1):
     mode = sys.argv[1]
 else:
