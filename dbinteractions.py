@@ -144,3 +144,99 @@ def delete_user(user_id):
         print("Something went wrong!")
     disconnect_db(conn, cursor)
     return success
+
+
+def log_user(email, password):
+    # Defining variables before try-except block
+    login_token = None
+    success = False
+    conn, cursor = connect_db()
+    try:
+        # SELECT query for gabbing data from user table and compare email and password values
+        cursor.execute(
+            "select id, f_name, l_name, email, phone from user where email = ? and password = ?", [email, password])
+        # If this combo exists, using fetchone() to store the result in a variable
+        user = cursor.fetchone()
+        # In case the query is successful, we create a login_token and INSERT it into user_session table for storing this data. user_id is taken from user[0]
+        if(user):
+            login_token = create_login_token()
+            cursor.execute("insert into user_session(login_token, user_id) values(?, ?)", [
+                login_token, user[0]])
+            # Saving changes
+            conn.commit()
+            success = True
+    except db.OperationalError:
+        print("Something is wrong with the DB, please try again in 5 minutes")
+    except db.ProgrammingError:
+        print("Error running DB query, please file bug report")
+    except:
+        print("Something went wrong!")
+    disconnect_db(conn, cursor)
+    return login_token, success, user
+
+
+def logout_user(login_token):
+    success = False
+    conn, cursor = connect_db()
+    try:
+        # To log out, we need to delete login_token from user_session table and we return do data on successful delete
+        cursor.execute(
+            "delete from user_session where login_token = ?", [login_token])
+        conn.commit()
+        if(cursor.rowcount == 1):
+            success = True
+    except db.OperationalError:
+        print("Something is wrong with the DB, please try again in 5 minutes")
+    except db.ProgrammingError:
+        print("Error running DB query, please file bug report")
+    except:
+        print("Something went wrong!")
+    disconnect_db(conn, cursor)
+    return success
+
+
+def get_all_items():
+    # Defining variables before try-except block
+    items = []
+    conn, cursor = connect_db()
+    try:
+        # Using SELECT statement to retrieve the users that follow the profile with that user_id
+        cursor.execute(
+            "select id, name, price, image_url from item")
+        # Saving data using fetchall()
+        items = cursor.fetchall()
+    except db.OperationalError:
+        print("Something is wrong with the DB, please try again in 5 minutes")
+    except db.ProgrammingError:
+        print("Error running DB query, please file bug report")
+    except:
+        print("Something went wrong!")
+    disconnect_db(conn, cursor)
+    return items
+
+
+def get_cart_items(login_token):
+    # Defining variables before try-except block
+    user = None
+    user_id = None
+    cart_items = []
+    conn, cursor = connect_db()
+    try:
+        # SELECT request to pull down login_token from the db
+        cursor.execute(
+            "select user_id from user_session where login_token = ?", [login_token])
+        # Saving this row with fetchone()
+        user = cursor.fetchone()
+        # Assigning the correct position of user_id in the row 'user'
+        user_id = user[0]
+        cursor.execute(
+            "select i.id, name, price, image_url, quantity from item i inner join cart_item ci on i.id = ci.item_id inner join cart c on c.id = ci.cart_id where c.user_id = ?", [user_id])
+        cart_items = cursor.fetchall()
+    except db.OperationalError:
+        print("Something is wrong with the DB, please try again in 5 minutes")
+    except db.ProgrammingError:
+        print("Error running DB query, please file bug report")
+    except:
+        print("Something went wrong!")
+    disconnect_db(conn, cursor)
+    return cart_items

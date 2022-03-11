@@ -94,6 +94,80 @@ def delete_user():
         return Response("Sorry, something is wrong with the service. Please try again later", mimetype="plain/text", status=501)
 
 
+@app.post('/api/login')
+def log_user():
+    try:
+        # Requesting data from the frontend
+        email = request.json['email']
+        password = request.json['password']
+        # Returning values from the function and sql query
+        login_token, success, user = dbi.log_user(email, password)
+        # In case of a success we convert the user into an object and then to json
+        if(success == True):
+            user = {
+                "userId": user[0],
+                "firstName": user[1],
+                "lastName": user[2],
+                "email": user[3],
+                "phone": user[4],
+            }
+            user_json = json.dumps(user, default=str)
+            # Returning response in json and request status
+            return Response(user_json, mimetype="application/json", status=200)
+        else:
+            return Response("Please enter valid data", mimetype="plain/text", status=400)
+# In case of error this will be returned
+    except:
+        print("Something went wrong")
+        return Response("Sorry, something is wrong with the service. Please try again later", mimetype="plain/text", status=501)
+
+
+@app.delete('/api/login')
+def logout_user():
+    try:
+        # Requesting data from the frontend
+        login_token = request.json['loginToken']
+        # In case of success we're getting 204 status and no data returned
+        success = dbi.logout_user(login_token)
+        if(success == True):
+            return Response(mimetype="application/json", status=204)
+        else:
+            return Response("Please enter valid data", mimetype="plain/text", status=400)
+# In case of error this will be returned
+    except:
+        print("Something went wrong")
+        return Response("Sorry, something is wrong with the service. Please try again later", mimetype="plain/text", status=501)
+
+
+@app.get('/api/items')
+def get_all_items():
+    try:
+        # Getting the list of follows that the user(userId) follows
+        items = dbi.get_all_items()
+        items_json = json.dumps(items, default=str)
+        # Returning response in json and request status
+        return Response(items_json, mimetype="application/json", status=200)
+# In case of error this will be returned
+    except:
+        print("Something went wrong")
+        return Response("Sorry, something is wrong with the service. Please try again later", mimetype="plain/text", status=501)
+
+
+@app.get('/api/cart-item')
+def get_cart_items():
+    try:
+        # Requesting data from the frontend
+        login_token = request.args['loginToken']
+        cart_items = dbi.get_cart_items(login_token)
+        cart_items_json = json.dumps(cart_items, default=str)
+        # Returning response in json and request status
+        return Response(cart_items_json, mimetype="application/json", status=200)
+# In case of error this will be returned
+    except:
+        print("Something went wrong")
+        return Response("Sorry, something is wrong with the service. Please try again later", mimetype="plain/text", status=501)
+
+
 if(len(sys.argv) > 1):
     mode = sys.argv[1]
 else:
