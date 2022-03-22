@@ -284,3 +284,23 @@ def place_order(login_token):  # Function and its arguments
     disconnect_db(conn, cursor)
     # Returning variables from the function
     return success, order
+
+
+def get_all_bags():
+    # Defining variables before try-except block
+    bags = []
+    conn, cursor = connect_db()
+    try:
+        # Using SELECT statement to retrieve the users that follow the profile with that user_id
+        cursor.execute(
+            "select id, name, price, image_url from item where category_id = 1")
+        # Saving data using fetchall()
+        bags = cursor.fetchall()
+    except db.OperationalError:
+        print("Something is wrong with the DB, please try again in 5 minutes")
+    except db.ProgrammingError:
+        print("Error running DB query, please file bug report")
+    except:
+        print("Something went wrong!")
+    disconnect_db(conn, cursor)
+    return bags

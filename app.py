@@ -189,6 +189,20 @@ def place_order():
         return Response("Sorry, something is wrong with the service. Please try again later", mimetype="plain/text", status=501)
 
 
+@app.get('/api/bags')
+def get_all_bags():
+    try:
+        # Getting the list of follows that the user(userId) follows
+        bags = dbi.get_all_bags()
+        bags_json = json.dumps(bags, default=str)
+        # Returning response in json and request status
+        return Response(bags_json, mimetype="application/json", status=200)
+# In case of error this will be returned
+    except:
+        print("Something went wrong")
+        return Response("Sorry, something is wrong with the service. Please try again later", mimetype="plain/text", status=501)
+
+
 if(len(sys.argv) > 1):
     mode = sys.argv[1]
 else:
