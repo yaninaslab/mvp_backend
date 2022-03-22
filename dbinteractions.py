@@ -240,3 +240,47 @@ def get_cart_items(login_token):
         print("Something went wrong!")
     disconnect_db(conn, cursor)
     return cart_items
+
+
+def place_order(login_token):  # Function and its arguments
+    # We need to assign a new variable before try-except block if we're going to use it inside the block
+    success = False
+    user = None
+    user_id = None
+    item_id = None
+    cart_items = []
+    order = []
+    conn, cursor = connect_db()
+    try:
+        # INSERT request with the inputs in []
+        cursor.execute(
+            "select user_id from user_session where login_token = ?", [login_token])
+        # Saving this row with fetchone()
+        user = cursor.fetchone()
+        # Assigning the correct position of user_id in the row 'user'
+        user_id = user[0]
+        # The following condition checks if the insert happens
+        # if(cursor.rowcount == 1):
+        cursor.execute(
+            "select i.id, name, price, image_url, quantity from item i inner join cart_item ci on i.id = ci.item_id inner join cart c on c.id = ci.cart_id where c.user_id = ?", [user_id])
+        cart_items = cursor.fetchall()
+        item_id = cart_items[0][0]
+        # Another INSERT into user_session table
+        cursor.execute("insert into purchase(item_id, user_id) values(?, ?)", [
+            item_id, user_id])
+        # Saving changes
+        conn.commit()
+        if(cursor.rowcount == 1):
+            # In case sql queries are successful, new_user is set to True and returned to API
+            success = True
+            order = True
+        # In case of various errors this will be returned
+    except db.OperationalError:
+        print("Something is wrong with the DB, please try again in 5 minutes")
+    except db.ProgrammingError:
+        print("Error running DB query, please file bug report")
+    except:
+        print("Something went wrong!")
+    disconnect_db(conn, cursor)
+    # Returning variables from the function
+    return success, order

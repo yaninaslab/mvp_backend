@@ -110,6 +110,7 @@ def log_user():
                 "lastName": user[2],
                 "email": user[3],
                 "phone": user[4],
+                "loginToken": login_token
             }
             user_json = json.dumps(user, default=str)
             # Returning response in json and request status
@@ -162,6 +163,26 @@ def get_cart_items():
         cart_items_json = json.dumps(cart_items, default=str)
         # Returning response in json and request status
         return Response(cart_items_json, mimetype="application/json", status=200)
+# In case of error this will be returned
+    except:
+        print("Something went wrong")
+        return Response("Sorry, something is wrong with the service. Please try again later", mimetype="plain/text", status=501)
+
+
+@app.post('/api/purchase')
+def place_order():
+    try:
+        # Requesting data from the frontend
+        login_token = request.json['loginToken']
+        # Returning values from the function and sql query
+        success, order = dbi.place_order(login_token)
+        # In case of a success we convert the user into an object and then to json
+        if(success == True):
+            order_json = json.dumps(order, default=str)
+            # Returning response in json and request status
+            return Response(order_json, mimetype="application/json", status=200)
+        else:
+            return Response("Please enter valid data", mimetype="plain/text", status=400)
 # In case of error this will be returned
     except:
         print("Something went wrong")
